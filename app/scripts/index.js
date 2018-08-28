@@ -52,7 +52,7 @@ window.App = {
     MarketPlace.deployed().then(function(i) {
       i.buy(productId, {value: sendAmount, from: web3.eth.accounts[0], gas: 440000}).then( function() {
         $("#msg").show();
-        $("#msg").html("You have successfully purchased the product!");
+        $("#msg").html("You have successfully purchased the property!");
       })
     });
     event.preventDefault();
@@ -68,18 +68,61 @@ function renderProductDetails(productId) {
       $("#product-price").html(displayPrice(p[6]));
       $("#product-id").val(p[0]);
       $("#buy-now-price").val(p[6]);
+      ipfs.cat(p[4]).then(function(file) {
+        var content = file.toString();
+        $("#product-desc").append("<div>" + content + "</div>");
+      })
     });
   })
 }
 
 function saveProduct(product) {
-  MarketPlace.deployed().then(function(f) {
-    return f.addProductToStore(product["product-name"], product["product-category"], "imageLink", "descLink", Date.parse(product["product-start-time"]) / 1000, web3.toWei(product["product-price"], 'ether'), product["product-condition"], {from: web3.eth.accounts[0], gas: 4700000});
-  }).then(function(f) {
-    alert("Product added to store!");
+  // 1. Upload image to IPFS and get the hash
+  // 2. Add description to IPFS and get the hash
+  // 3. Pass the hashes to addProductToStore
+
+
+  var imageId;
+  var descId;
+  saveImageonIpfs(reader).then(function(id) {
+    imageId = id;
+    saveTextBlobOnIpfs(product["product-description"]).then(function(id) {
+      descId = id;
+      MarketPlace.deployed().then(function(f) {
+        return f.addProductToStore(product["product-name"], product["product-category"], imageId, descId, Date.parse(product["product-start-time"]) / 1000, web3.toWei(product["product-price"], 'ether'), product["product-condition"], {from: web3.eth.accounts[0], gas: 4700000});
+      }).then(function(f) {
+        alert("Property added to store!");
+      });
+    });
   });
 }
 
+function saveImageonIpfs(reader) {
+  return new Promise(function(resolve, reject) {
+    const buffer = Buffer.from(reader.result);
+    ipfs.add(buffer)
+    .then((response) => { console.log(response)
+    resolve(response[0].hash);
+  }).catch((err) => {
+    console.error(err)
+    reject(err);
+  })
+  })
+}
+
+function saveTextBlobOnIpfs(blob) {
+  return new Promise(function(resolve, reject) {
+    const descBuffer = Buffer.from(blob, 'utf-8');
+    ipfs.add(descBuffer)
+    .then((response) => {
+      console.log(response)
+    resolve(response[0].hash);
+  }).catch((err) => {
+    console.error(err)
+    reject(err);
+  })
+  })
+}
 
 function renderStore() {
   // Get the product count
