@@ -91,7 +91,7 @@ function saveProduct(product) {
       MarketPlace.deployed().then(function(f) {
         return f.addProductToStore(product["product-name"], product["product-category"], imageId, descId, Date.parse(product["product-start-time"]) / 1000, web3.toWei(product["product-price"], 'ether'), product["product-condition"], {from: web3.eth.accounts[0], gas: 4700000});
       }).then(function(f) {
-        alert("Property added to store!");
+        alert("Property added to marketplace!");
       });
     });
   });
@@ -159,6 +159,7 @@ function renderProduct(instance, index) {
 function displayPrice(amt) {
   return "&Xi;" + web3.fromWei(amt, 'ether');
 }
+
 
 window.addEventListener('load', function() {
  // Checking if Web3 has been injected by the browser (Mist/MetaMask)

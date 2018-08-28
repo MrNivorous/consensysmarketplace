@@ -1,6 +1,8 @@
 pragma solidity ^0.4.23;
+import 'openzeppelin-solidity/contracts/lifecycle/Pausable.sol';
 
-contract MarketPlace {
+
+contract MarketPlace is Pausable {
 
     enum ProductCondition {New, Used}
 
